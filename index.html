@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>BIST 100 Pro Analiz</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%); min-height: 100vh; padding-bottom: 20px; }
+        .header { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 16px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 22px; font-weight: 700; color: #1d1d1f; }
+        .header p { font-size: 12px; color: #86868b; }
+        .btn { padding: 10px 16px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+        .btn:active { transform: scale(0.96); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .loading { text-align: center; padding: 60px 20px; color: white; }
+        .loading-spinner { width: 50px; height: 50px; border: 4px solid rgba(255, 255, 255, 0.3); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .progress-bar { background: rgba(255, 255, 255, 0.2); height: 8px; border-radius: 10px; margin: 20px auto; max-width: 80%; overflow: hidden; }
+        .progress-fill { background: white; height: 100%; border-radius: 10px; transition: width 0.3s; }
+        .filters { display: flex; gap: 8px; overflow-x: auto; padding: 12px 16px; scrollbar-width: none; }
+        .filters::-webkit-scrollbar { display: none; }
+        .chip { padding: 8px 16px; background: rgba(255, 255, 255, 0.25); color: white; border-radius: 20px; font-size: 13px; font-weight: 600; white-space: nowrap; border: none; cursor: pointer; transition: all 0.2s; }
+        .chip.active { background: white; color: #667eea; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); }
+        .sort-buttons { display: flex; gap: 8px; padding: 0 16px 12px; }
+        .sort-btn { padding: 6px 12px; background: rgba(255, 255, 255, 0.2); color: white; border-radius: 10px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; }
+        .sort-btn.active { background: white; color: #667eea; }
+        .results-header { display: flex; justify-content: space-between; align-items: center; padding: 16px; }
+        .results-header h2 { font-size: 18px; font-weight: 700; color: white; }
+        .count-badge { background: rgba(255, 255, 255, 0.25); color: white; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+        .stocks { padding: 0 16px; }
+        .stock-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1); }
+        .stock-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        .stock-name { font-size: 20px; font-weight: 700; color: #1d1d1f; }
+        .stock-recommendation { font-size: 14px; font-weight: 600; margin-top: 4px; }
+        .stock-price { font-size: 18px; font-weight: 700; color: #1d1d1f; text-align: right; }
+        .stock-score { font-size: 24px; font-weight: 700; text-align: right; }
+        .ema-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 12px; }
+        .ema-box { background: #f5f5f7; padding: 8px 4px; border-radius: 8px; text-align: center; }
+        .ema-label { font-size: 10px; color: #86868b; font-weight: 600; margin-bottom: 4px; }
+        .ema-value { font-size: 11px; font-weight: 700; color: #1d1d1f; }
+        .indicators { display: flex; flex-wrap: wrap; gap: 6px; }
+        .indicator-tag { padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: 600; }
+        .ind-green { background: #d1f4e0; color: #0e8345; }
+        .ind-red { background: #ffd9d9; color: #c41e3a; }
+        .ind-yellow { background: #fff4cc; color: #996600; }
+        .empty-state { text-align: center; padding: 60px 20px; color: white; }
+        .empty-icon { font-size: 64px; margin-bottom: 16px; }
+        .info-box { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-radius: 16px; padding: 16px; margin: 16px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1); }
+        .info-box h3 { font-size: 16px; font-weight: 700; color: #1d1d1f; margin-bottom: 12px; }
+        .info-box p { font-size: 12px; color: #1d1d1f; line-height: 1.6; margin-bottom: 8px; }
+        .error-box { background: #ffd9d9; border: 2px solid #c41e3a; color: #c41e3a; padding: 16px; margin: 16px; border-radius: 12px; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function App() {
+            const [stocks, setStocks] = useState([]);
+            const [filteredStocks, setFilteredStocks] = useState([]);
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState(null);
+            const [lastUpdate, setLastUpdate] = useState(null);
+            const [activeChip, setActiveChip] = useState('all');
+            const [sortBy, setSortBy] = useState('score');
+            const [progress, setProgress] = useState(0);
+
+            const RAPIDAPI_KEY = 'a6b421a13cmshfff258d85702407p19ef6fjsn0e60e66f9b71';
+            const RAPIDAPI_HOST = 'apidojo-yahoo-finance-v1.p.rapidapi.com';
+
+            const bistStocks = ['GARAN.IS', 'THYAO.IS', 'KCHOL.IS', 'AKBNK.IS', 'EREGL.IS', 'SAHOL.IS', 'PETKM.IS', 'TUPRS.IS', 'SISE.IS', 'TCELL.IS', 'ASELS.IS', 'BIMAS.IS', 'ISCTR.IS', 'KOZAL.IS', 'VAKBN.IS', 'SODA.IS', 'FROTO.IS', 'TOASO.IS', 'HALKB.IS', 'ENKAI.IS', 'ARCLK.IS', 'TAVHL.IS', 'YKBNK.IS', 'PGSUS.IS'];
+
+            const fetchYahooData = async (symbol) => {
+                try {
+                    const url = `https://${RAPIDAPI_HOST}/market/get-charts?region=US&lang=en&symbol=${symbol}&interval=1d&range=1y`;
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: { 'X-RapidAPI-Key': RAPIDAPI_KEY, 'X-RapidAPI-Host': RAPIDAPI_HOST }
+                    });
+                    if (!response.ok) return null;
+                    const data = await response.json();
+                    const chart = data.chart?.result?.[0];
+                    if (!chart) return null;
+                    const quote = chart.indicators?.quote?.[0];
+                    if (!quote) return null;
+                    return { symbol: symbol.replace('.IS', ''), timestamps: chart.timestamp, close: quote.close, high: quote.high, low: quote.low, volume: quote.volume, currentPrice: chart.meta?.regularMarketPrice || quote.close[quote.close.length - 1] };
+                } catch (err) {
+                    return null;
+                }
+            };
+
+            const calculateEMA = (data, period) => {
+                if (!data || data.length < period) return null;
+                const k = 2 / (period + 1);
+                let ema = data.slice(0, period).reduce((a, b) => a + b, 0) / period;
+                for (let i = period; i < data.length; i++) { ema = data[i] * k + ema * (1 - k); }
+                return ema;
+            };
+
+            const calculateRSI = (data, period = 14) => {
+                if (!data || data.length < period + 1) return null;
+                let gains = 0, losses = 0;
+                for (let i = data.length - period; i < data.length; i++) {
+                    const change = data[i] - data[i - 1];
+                    if (change > 0) gains += change; else losses -= change;
+                }
+                const avgGain = gains / period, avgLoss = losses / period;
+                if (avgLoss === 0) return 100;
+                return 100 - (100 / (1 + avgGain / avgLoss));
+            };
+
+            const calculateMACD = (data) => {
+                if (!data || data.length < 26) return null;
+                const ema12 = calculateEMA(data, 12), ema26 = calculateEMA(data, 26), macdLine = ema12 - ema26;
+                const macdValues = [];
+                for (let i = 26; i < data.length; i++) {
+                    const slice = data.slice(0, i + 1);
+                    macdValues.push(calculateEMA(slice, 12) - calculateEMA(slice, 26));
+                }
+                const signal = calculateEMA(macdValues, 9);
+                return { macd: macdLine, signal, histogram: macdLine - signal };
+            };
+
+            const calculateBollingerBands = (data, period = 20) => {
+                if (!data || data.length < period) return null;
+                const slice = data.slice(-period);
+                const sma = slice.reduce((a, b) => a + b, 0) / period;
+                const variance = slice.reduce((sum, val) => sum + Math.pow(val - sma, 2), 0) / period;
+                const stdDev = Math.sqrt(variance);
+                return { upper: sma + (stdDev * 2), middle: sma, lower: sma - (stdDev * 2) };
+            };
+
+            const calculateStochastic = (high, low, close, period = 14) => {
+                if (!high || high.length < period) return null;
+                const highSlice = high.slice(-period), lowSlice = low.slice(-period), currentClose = close[close.length - 1];
+                const highestHigh = Math.max(...highSlice), lowestLow = Math.min(...lowSlice);
+                if (highestHigh === lowestLow) return 50;
+                return ((currentClose - lowestLow) / (highestHigh - lowestLow)) * 100;
+            };
+
+            const calculateADX = (high, low, close, period = 14) => {
+                if (!high || high.length < period + 1) return null;
+                let plusDM = 0, minusDM = 0, tr = 0;
+                for (let i = close.length - period; i < close.length; i++) {
+                    const highDiff = high[i] - high[i - 1], lowDiff = low[i - 1] - low[i];
+                    plusDM += highDiff > lowDiff && highDiff > 0 ? highDiff : 0;
+                    minusDM += lowDiff > highDiff && lowDiff > 0 ? lowDiff : 0;
+                    tr += Math.max(high[i] - low[i], Math.abs(high[i] - close[i - 1]), Math.abs(low[i] - close[i - 1]));
+                }
+                if (tr === 0) return 0;
+                const plusDI = (plusDM / tr) * 100, minusDI = (minusDM / tr) * 100;
+                if (plusDI + minusDI === 0) return 0;
+                return Math.abs(plusDI - minusDI) / (plusDI + minusDI) * 100;
+            };
+
+            const calculateRTI = (data, volume) => {
+                if (!data || data.length < 20) return null;
+                const recentData = data.slice(-20);
+                const priceChange = ((recentData[recentData.length - 1] - recentData[0]) / recentData[0]) * 100;
+                const volatility = Math.abs(priceChange);
+                const avgVolume = volume.slice(-20).reduce((a, b) => a + b, 0) / 20;
+                const volumeRatio = volume[volume.length - 1] / avgVolume;
+                return Math.min(50 + (volatility * 5) + (volumeRatio * 10), 100);
+            };
+
+            const getSignal = (value, type) => {
+                if (type === 'rsi') return value < 30 ? { signal: 'buy', color: 'green', text: 'Aşırı Satım' } : value > 70 ? { signal: 'sell', color: 'red', text: 'Aşırı Alım' } : { signal: 'neutral', color: 'yellow', text: 'Nötr' };
+                if (type === 'macd') return value > 0 ? { signal: 'buy', color: 'green', text: 'Pozitif' } : { signal: 'sell', color: 'red', text: 'Negatif' };
+                if (type === 'stochastic') return value < 20 ? { signal: 'buy', color: 'green', text: 'Aşırı Satım' } : value > 80 ? { signal: 'sell', color: 'red', text: 'Aşırı Alım' } : { signal: 'neutral', color: 'yellow', text: 'Nötr' };
+                if (type === 'adx') return value > 25 ? { signal: 'buy', color: 'green', text: 'Güçlü Trend' } : value < 20 ? { signal: 'neutral', color: 'yellow', text: 'Zayıf Trend' } : { signal: 'neutral', color: 'yellow', text: 'Orta' };
+                if (type === 'rti') return value > 65 ? { signal: 'buy', color: 'green', text: 'Güçlü' } : value < 45 ? { signal: 'sell', color: 'red', text: 'Zayıf' } : { signal: 'neutral', color: 'yellow', text: 'Orta' };
+                return { signal: 'neutral', color: 'yellow', text: 'Bilinmiyor' };
+            };
+
+            const getEMASignal = (price, ema9, ema21, ema50) => {
+                const above = (price > ema9 && ema9 > ema21 && ema21 > ema50);
+                const below = (price < ema9 && ema9 < ema21 && ema21 < ema50);
+                if (above) return { signal: 'buy', color: 'green', text: 'Yükseliş Trendi' };
+                if (below) return { signal: 'sell', color: 'red', text: 'Düşüş Trendi' };
+                return { signal: 'neutral', color: 'yellow', text: 'Karışık' };
+            };
+
+            const getBollingerSignal = (price, bb) => {
+                if (price < bb.lower) return { signal: 'buy', color: 'green', text: 'Alt Banda Yakın' };
+                if (price > bb.upper) return { signal: 'sell', color: 'red', text: 'Üst Banda Yakın' };
+                return { signal: 'neutral', color: 'yellow', text: 'Bantlar Arası' };
+            };
+
+            const calculateScore = (indicators) => {
+                let buySignals = 0, total = 0;
+                Object.values(indicators).forEach(ind => { if (ind?.signal) { total++; if (ind.signal === 'buy') buySignals++; } });
+                if (total === 0) return { score: 50, recommendation: 'Veri Yetersiz' };
+                const score = (buySignals / total) * 100;
+                return { score: score.toFixed(0), recommendation: score >= 70 ? 'GÜÇLÜ ALIM' : score >= 55 ? 'ALIM' : score >= 45 ? 'NÖTR' : score >= 30 ? 'SATIM' : 'GÜÇLÜ SATIM' };
+            };
+
+            const analyzeAllStocks = async () => {
+                setLoading(true); setError(null); setProgress(0);
+                const analyzedStocks = [];
+                for (let i = 0; i < bistStocks.length; i++) {
+                    const symbol = bistStocks[i];
+                    setProgress(((i + 1) / bistStocks.length) * 100);
+                    try {
+                        const data = await fetchYahooData(symbol);
+                        if (!data?.close) continue;
+                        const close = data.close.filter(v => v != null);
+                        const high = data.high.filter(v => v != null);
+                        const low = data.low.filter(v => v != null);
+                        const volume = data.volume.filter(v => v != null);
+                        if (close.length < 200) continue;
+                        const ema9 = calculateEMA(close, 9), ema21 = calculateEMA(close, 21), ema50 = calculateEMA(close, 50), ema100 = calculateEMA(close, 100), ema200 = calculateEMA(close, 200);
+                        const rsi = calculateRSI(close), macd = calculateMACD(close), bb = calculateBollingerBands(close), stochastic = calculateStochastic(high, low, close), adx = calculateADX(high, low, close), rti = calculateRTI(close, volume);
+                        const price = data.currentPrice;
+                        const indicators = {
+                            rsi: rsi ? { value: rsi, ...getSignal(rsi, 'rsi') } : null,
+                            macd: macd ? { value: macd.histogram, ...getSignal(macd.histogram, 'macd') } : null,
+                            stochastic: stochastic ? { value: stochastic, ...getSignal(stochastic, 'stochastic') } : null,
+                            adx: adx ? { value: adx, ...getSignal(adx, 'adx') } : null,
+                            rti: rti ? { value: rti, ...getSignal(rti, 'rti') } : null,
+                            ema: getEMASignal(price, ema9, ema21, ema50),
+                            bollinger: bb ? { value: price, ...getBollingerSignal(price, bb) } : null
+                        };
+                        const scoreData = calculateScore(indicators);
+                        analyzedStocks.push({ name: data.symbol, price, ema9, ema21, ema50, ema100, ema200, indicators, score: scoreData.score, recommendation: scoreData.recommendation });
+                        await new Promise(resolve => setTimeout(resolve, 200));
+                    } catch (err) {}
+                }
+                if (analyzedStocks.length === 0) setError('Hiçbir hisse analiz edilemedi. API limitine ulaşmış olabilirsiniz.');
+                setStocks(analyzedStocks); setFilteredStocks(analyzedStocks); setLastUpdate(new Date()); setLoading(false); setProgress(100);
+            };
+
+            useEffect(() => { analyzeAllStocks(); }, []);
+
+            const handleQuickFilter = (filterType) => {
+                setActiveChip(filterType);
+                let filtered = [...stocks];
+                if (filterType === 'strong-buy') filtered = filtered.filter(s => s.score >= 70);
+                else if (filterType === 'buy') filtered = filtered.filter(s => s.score >= 55 && s.score < 70);
+                else if (filterType === 'oversold') filtered = filtered.filter(s => s.indicators.rsi?.value < 30);
+                else if (filterType === 'overbought') filtered = filtered.filter(s => s.indicators.rsi?.value > 70);
+                setFilteredStocks(filtered);
+            };
+
+            const handleSort = (type) => {
+                setSortBy(type);
+                let sorted = [...filteredStocks];
+                if (type === 'score') sorted.sort((a, b) => b.score - a.score);
+                else if (type === 'name') sorted.sort((a, b) => a.name.localeCompare(b.name));
+                else if (type === 'price') sorted.sort((a, b) => b.price - a.price);
+                setFilteredStocks(sorted);
+            };
+
+            const getScoreColor = (score) => score >= 70 ? '#10b981' : score >= 55 ? '#3b82f6' : score >= 45 ? '#f59e0b' : score >= 30 ? '#f97316' : '#ef4444';
+
+            return (
+                <div>
+                    <div className="header">
+                        <div><h1>📊 BIST Pro Analiz</h1><p>{lastUpdate ? `Son: ${lastUpdate.toLocaleTimeString('tr-TR')}` : 'Yükleniyor...'}</p></div>
+                        <button className="btn" onClick={analyzeAllStocks} disabled={loading}>{loading ? '⏳' : '🔄 Yenile'}</button>
+                    </div>
+                    {error && <div className="error-box">⚠️ {error}</div>}
+                    {loading && (
+                        <div className="loading">
+                            <div className="loading-spinner"></div>
+                            <h2>Analiz Ediliyor...</h2>
+                            <p>%{Math.round(progress)} tamamlandı</p>
+                            <div className="progress-bar"><div className="progress-fill" style={{width: `${progress}%`}}></div></div>
+                            <p style={{fontSize: '12px', marginTop: '10px'}}>Bu 1-2 dakika sürebilir</p>
+                        </div>
+                    )}
+                    {!loading && stocks.length > 0 && (
+                        <>
+                            <div className="filters">
+                                {[{id: 'all', label: '📊 Tümü'}, {id: 'strong-buy', label: '🟢 Güçlü Alım'}, {id: 'buy', label: '✅ Alım'}, {id: 'oversold', label: '📉 Aşırı Satım'}, {id: 'overbought', label: '📈 Aşırı Alım'}].map(chip => (
+                                    <button key={chip.id} className={`chip ${activeChip === chip.id ? 'active' : ''}`} onClick={() => handleQuickFilter(chip.id)}>{chip.label}</button>
+                                ))}
+                            </div>
+                            <div className="sort-buttons">
+                                {[{id: 'score', label: '⭐ Skor'}, {id: 'name', label: '🔤 İsim'}, {id: 'price', label: '💰 Fiyat'}].map(sort => (
+                                    <button key={sort.id} className={`sort-btn ${sortBy === sort.id ? 'active' : ''}`} onClick={() => handleSort(sort.id)}>{sort.label}</button>
+                                ))}
+                            </div>
+                            <div className="results-header"><h2>Analiz Sonuçları</h2><span className="count-badge">{filteredStocks.length} / {stocks.length}</span></div>
+                            <div className="stocks">
+                                {filteredStocks.map((stock, idx) => (
+                                    <div key={idx} className="stock-card">
+                                        <div className="stock-header">
+                                            <div><div className="stock-name">{stock.name}</div><div className="stock-recommendation" style={{ color: getScoreColor(stock.score) }}>{stock.recommendation}</div></div>
+                                            <div><div className="stock-price">₺{stock.price?.toFixed(2)}</div><div className="stock-score" style={{ color: getScoreColor(stock.score) }}>{stock.score}</div></div>
+                                        </div>
+                                        <div className="ema-grid">
+                                            {[{label: 'EMA9', value: stock.ema9}, {label: 'EMA21', value: stock.ema21}, {label: 'EMA50', value: stock.ema50}, {label: 'EMA100', value: stock.ema100}, {label: 'EMA200', value: stock.ema200}].map((ema, i) => (
+                                                <div key={i} className="ema-box"><div className="ema-label">{ema.label}</div><div className="ema-value">{ema.value ? `₺${ema.value.toFixed(1)}` : '-'}</div></div>
+                                            ))}
+                                        </div>
+                                        <div className="indicators">
+                                            {Object.entries(stock.indicators).map(([key, ind]) => {
+                                                if (!ind) return null;
+                                                const colorClass = ind.color === 'green' ? 'ind-green' : ind.color === 'red' ? 'ind-red' : 'ind-yellow';
+                                                const icon = ind.signal === 'buy' ? '🟢' : ind.signal === 'sell' ? '🔴' : '🟡';
+                                                return <div key={key} className={`indicator-tag ${colorClass}`}>{icon} {key.toUpperCase()}: {ind.text}</div>;
+                                            })}
+                                        </div>
+                                    </div>
+                                ))}
+                                {filteredStocks.length === 0 && <div className="empty-state"><div className="empty-icon">😕</div><h3>Sonuç Bulunamadı</h3><p>Farklı bir filtre deneyin</p></div>}
+                            </div>
+                            <div className="info-box">
+                                <h3>📖 İndikatör Açıklamaları</h3>
+                                <p><strong>RSI:</strong> 30 altı aşırı satım, 70 üstü aşırı alım</p>
+                                <p><strong>MACD:</strong> Pozitif yükseliş, negatif düşüş sinyali</p>
+                                <p><strong>Stochastic:</strong> 20 altı aşırı satım, 80 üstü aşırı alım</p>
+                                <p><strong>ADX:</strong> 25 üstü güçlü trend</p>
+                                <p><strong>RTI:</strong> 65 üstü güçlü momentum</p>
+                                <p><strong>Bollinger:</strong> Alt banda yakınsa alım, üst banda yakınsa satım</p>
+                                <p><strong>EMA:</strong> Fiyat &gt; EMA9 &gt; EMA21 &gt; EMA50 ise yükseliş trendi</p>
+                            </div>
+                        </>
+                    )}
+                </div>
+            );
+        }
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
