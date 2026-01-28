@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #1d1d1f;
+            margin-bottom: 24px;
+            font-size: 28px;
+        }
+        .test-section {
+            margin-bottom: 32px;
+            padding: 20px;
+            background: #f5f5f7;
+            border-radius: 12px;
+        }
+        .test-section h2 {
+            color: #667eea;
+            margin-bottom: 16px;
+            font-size: 20px;
+        }
+        button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 12px;
+            margin-bottom: 12px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 16px;
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            white-space: pre-wrap;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            border-left-color: #10b981;
+            background: #d1f4e0;
+            color: #0e8345;
+        }
+        .error {
+            border-left-color: #ef4444;
+            background: #ffd9d9;
+            color: #c41e3a;
+        }
+        .info {
+            background: #e7f3ff;
+            border-left-color: #3b82f6;
+            color: #1e40af;
+            padding: 12px;
+            margin-bottom: 16px;
+            border-radius: 8px;
+        }
+        .loading {
+            color: #667eea;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 API Test Sayfası</h1>
+        <div class="info">
+            Bu sayfa hangi API'nin çalıştığını test eder. Her butona tıklayıp sonuçları kontrol edin.
+        </div>
+
+        <!-- BIST API Test -->
+        <div class="test-section">
+            <h2>1️⃣ BIST API Testi</h2>
+            <p style="margin-bottom: 16px; color: #666;">
+                RapidAPI'deki BIST100 API'sini test eder (anlık fiyatlar)
+            </p>
+            <button onclick="testBISTAPI()" id="bistBtn">Test BIST API</button>
+            <div id="bistResult"></div>
+        </div>
+
+        <!-- Yahoo Finance API Test -->
+        <div class="test-section">
+            <h2>2️⃣ Yahoo Finance API Testi</h2>
+            <p style="margin-bottom: 16px; color: #666;">
+                RapidAPI'deki Yahoo Finance1 API'sini test eder (geçmiş veriler)
+            </p>
+            <button onclick="testYahooAPI()" id="yahooBtn">Test Yahoo Finance API</button>
+            <div id="yahooResult"></div>
+        </div>
+
+        <!-- Yahoo Finance Direct Test -->
+        <div class="test-section">
+            <h2>3️⃣ Yahoo Finance Direkt Testi</h2>
+            <p style="margin-bottom: 16px; color: #666;">
+                Yahoo Finance'ı direkt test eder (CORS kontrolü)
+            </p>
+            <button onclick="testYahooDirectAPI()" id="yahooDirBtn">Test Direkt Yahoo</button>
+            <div id="yahooDirResult"></div>
+        </div>
+    </div>
+
+    <script>
+        const RAPIDAPI_KEY = 'a6b421a13cmshfff258d85702407p19ef6fjsn0e60e66f9b71';
+
+        async function testBISTAPI() {
+            const resultDiv = document.getElementById('bistResult');
+            const btn = document.getElementById('bistBtn');
+            
+            btn.disabled = true;
+            resultDiv.innerHTML = '<div class="result loading">⏳ Test ediliyor...</div>';
+
+            try {
+                const response = await fetch('https://bist100-stock-data-15-minutes-late-live.p.rapidapi.com/bist100/prices', {
+                    method: 'GET',
+                    headers: {
+                        'x-rapidapi-host': 'bist100-stock-data-15-minutes-late-live.p.rapidapi.com',
+                        'x-rapidapi-key': RAPIDAPI_KEY
+                    }
+                });
+
+                const statusText = `Status: ${response.status} ${response.statusText}`;
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    resultDiv.innerHTML = `<div class="result error">❌ BIST API BAŞARISIZ\n\n${statusText}\n\nHata: ${errorText}</div>`;
+                    btn.disabled = false;
+                    return;
+                }
+
+                const data = await response.json();
+                resultDiv.innerHTML = `<div class="result success">✅ BIST API ÇALIŞIYOR!\n\n${statusText}\n\nVeri:\n${JSON.stringify(data, null, 2).substring(0, 500)}...</div>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result error">❌ BIST API HATASI\n\nHata: ${error.message}\n\nDetay: ${error.stack}</div>`;
+            }
+            
+            btn.disabled = false;
+        }
+
+        async function testYahooAPI() {
+            const resultDiv = document.getElementById('yahooResult');
+            const btn = document.getElementById('yahooBtn');
+            
+            btn.disabled = true;
+            resultDiv.innerHTML = '<div class="result loading">⏳ Test ediliyor...</div>';
+
+            try {
+                const symbol = 'GARAN.IS';
+                const url = `https://apidojo-yahoo-finance-v1.p.rapidapi.com/market/get-charts?region=US&lang=en&symbol=${symbol}&interval=1d&range=1y`;
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'X-RapidAPI-Key': RAPIDAPI_KEY,
+                        'X-RapidAPI-Host': 'apidojo-yahoo-finance-v1.p.rapidapi.com'
+                    }
+                });
+
+                const statusText = `Status: ${response.status} ${response.statusText}`;
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    resultDiv.innerHTML = `<div class="result error">❌ YAHOO API BAŞARISIZ\n\n${statusText}\n\nHata: ${errorText}</div>`;
+                    btn.disabled = false;
+                    return;
+                }
+
+                const data = await response.json();
+                const chart = data.chart?.result?.[0];
+                
+                if (!chart) {
+                    resultDiv.innerHTML = `<div class="result error">❌ YAHOO API VERI FORMATI YANLIŞ\n\n${statusText}\n\nVeri:\n${JSON.stringify(data, null, 2).substring(0, 500)}...</div>`;
+                    btn.disabled = false;
+                    return;
+                }
+
+                const quote = chart.indicators?.quote?.[0];
+                const closeData = quote?.close || [];
+                const currentPrice = chart.meta?.regularMarketPrice;
+                
+                resultDiv.innerHTML = `<div class="result success">✅ YAHOO API ÇALIŞIYOR!\n\n${statusText}\n\nSembol: ${symbol}\nGüncel Fiyat: ₺${currentPrice}\nGeçmiş Veri Sayısı: ${closeData.length} gün\n\nİlk 5 Kapanış Fiyatı:\n${closeData.slice(0, 5).join('\n')}\n\nTam Veri:\n${JSON.stringify(data, null, 2).substring(0, 500)}...</div>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result error">❌ YAHOO API HATASI\n\nHata: ${error.message}\n\nDetay: ${error.stack}</div>`;
+            }
+            
+            btn.disabled = false;
+        }
+
+        async function testYahooDirectAPI() {
+            const resultDiv = document.getElementById('yahooDirResult');
+            const btn = document.getElementById('yahooDirBtn');
+            
+            btn.disabled = true;
+            resultDiv.innerHTML = '<div class="result loading">⏳ Test ediliyor...</div>';
+
+            try {
+                const symbol = 'GARAN.IS';
+                const end = Math.floor(Date.now() / 1000);
+                const start = end - (30 * 24 * 60 * 60); // Son 30 gün
+                const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?period1=${start}&period2=${end}&interval=1d`;
+                
+                const response = await fetch(url);
+
+                const statusText = `Status: ${response.status} ${response.statusText}`;
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    resultDiv.innerHTML = `<div class="result error">❌ YAHOO DİREKT BAŞARISIZ (CORS?)\n\n${statusText}\n\nHata: ${errorText}</div>`;
+                    btn.disabled = false;
+                    return;
+                }
+
+                const data = await response.json();
+                resultDiv.innerHTML = `<div class="result success">✅ YAHOO DİREKT ÇALIŞIYOR! (CORS YOK)\n\n${statusText}\n\nVeri:\n${JSON.stringify(data, null, 2).substring(0, 500)}...</div>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result error">❌ YAHOO DİREKT HATASI (CORS Engellenmiş Olabilir)\n\nHata: ${error.message}\n\nBu normalde beklenen bir durum. GitLab Pages'te CORS engeli var.\nRapidAPI kullanmalıyız.</div>`;
+            }
+            
+            btn.disabled = false;
+        }
+
+        // Sayfa yüklendiğinde otomatik test
+        window.addEventListener('load', () => {
+            console.log('Test sayfası hazır. Butonlara tıklayın!');
+        });
+    </script>
+</body>
+</html>
