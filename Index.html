@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>BIST 100 Tarama</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-bottom: 20px;
+            overflow-x: hidden;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 20px 16px 16px 16px;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1d1d1f;
+            margin-bottom: 6px;
+        }
+        
+        .header p {
+            font-size: 14px;
+            color: #86868b;
+        }
+        
+        .controls {
+            padding: 16px;
+        }
+        
+        .filter-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+        
+        .filter-row {
+            margin-bottom: 16px;
+        }
+        
+        .filter-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        .filter-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 8px;
+        }
+        
+        .filter-input,
+        .filter-select {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #d2d2d7;
+            border-radius: 12px;
+            font-size: 16px;
+            background: white;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        
+        .filter-select {
+            background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%231d1d1f' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 40px;
+        }
+        
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        .btn {
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        .btn:active {
+            transform: scale(0.96);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        
+        .btn-full {
+            grid-column: 1 / -1;
+        }
+        
+        .stocks-container {
+            padding: 0 16px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0 12px 0;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+        }
+        
+        .count-badge {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .stock-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+        
+        .stock-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        
+        .stock-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1d1d1f;
+        }
+        
+        .stock-price {
+            font-size: 18px;
+            font-weight: 700;
+            color: #34c759;
+        }
+        
+        .indicators-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .indicator-box {
+            background: #f5f5f7;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        
+        .indicator-label {
+            font-size: 11px;
+            color: #86868b;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        
+        .indicator-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1d1d1f;
+        }
+        
+        .signals {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .signal-tag {
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .signal-buy {
+            background: #d1f4e0;
+            color: #0e8345;
+        }
+        
+        .signal-neutral {
+            background: #fff4cc;
+            color: #996600;
+        }
+        
+        .signal-sell {
+            background: #ffd9d9;
+            color: #c41e3a;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: white;
+        }
+        
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+        
+        .empty-state h3 {
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+        
+        .empty-state p {
+            font-size: 15px;
+            opacity: 0.8;
+        }
+        
+        .info-box {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 16px;
+            margin: 16px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+        
+        .info-box h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1d1d1f;
+            margin-bottom: 12px;
+        }
+        
+        .info-box ul {
+            margin-left: 20px;
+            color: #1d1d1f;
+        }
+        
+        .info-box li {
+            margin-bottom: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .resources {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 16px;
+            margin: 16px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+        
+        .resources h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1d1d1f;
+            margin-bottom: 12px;
+        }
+        
+        .resource-link {
+            display: block;
+            background: #f5f5f7;
+            padding: 14px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            text-decoration: none;
+            color: #1d1d1f;
+        }
+        
+        .resource-link:active {
+            background: #e8e8ed;
+        }
+        
+        .resource-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #667eea;
+        }
+        
+        .resource-desc {
+            font-size: 13px;
+            color: #86868b;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px auto;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .quick-filter-chips {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 12px 16px;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .quick-filter-chips::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .chip {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .chip.active {
+            background: white;
+            color: #667eea;
+            border-color: white;
+        }
+        
+        .chip:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📈 BIST 100 Tarama</h1>
+        <p>Teknik analiz ve alım sinyalleri</p>
+    </div>
+    
+    <div class="quick-filter-chips">
+        <div class="chip active" onclick="applyQuickFilter('all')">Tümü</div>
+        <div class="chip" onclick="applyQuickFilter('oversold')">Aşırı Satım</div>
+        <div class="chip" onclick="applyQuickFilter('golden')">Golden Cross</div>
+        <div class="chip" onclick="applyQuickFilter('strong')">Güçlü Trend</div>
+    </div>
+    
+    <div class="controls">
+        <div class="filter-card">
+            <div class="filter-row">
+                <label class="filter-label">RSI Aralığı</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <input type="number" class="filter-input" id="rsiMin" value="30" placeholder="Min">
+                    <input type="number" class="filter-input" id="rsiMax" value="70" placeholder="Max">
+                </div>
+            </div>
+            
+            <div class="filter-row">
+                <label class="filter-label">EMA Durumu</label>
+                <select class="filter-select" id="emaCross">
+                    <option value="all">Tüm Hisseler</option>
+                    <option value="golden">Golden Cross (Yükseliş)</option>
+                    <option value="death">Death Cross (Düşüş)</option>
+                </select>
+            </div>
+            
+            <div class="filter-row">
+                <label class="filter-label">RTI Minimum</label>
+                <input type="number" class="filter-input" id="rtiMin" value="50" placeholder="0-100">
+            </div>
+            
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="filterStocks()">🔍 Tara</button>
+                <button class="btn btn-secondary" onclick="loadSampleData()">📊 Örnek</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="info-box">
+        <h3>💡 Nasıl Kullanılır?</h3>
+        <ul>
+            <li>Üstteki hızlı filtreleri kullanın</li>
+            <li>"Örnek" butonuyla demo veriyi yükleyin</li>
+            <li>Filtreleri ayarlayıp "Tara" butonuna tıklayın</li>
+            <li>Alım fırsatlarını görüntüleyin</li>
+        </ul>
+    </div>
+    
+    <div class="stocks-container" id="stocksContainer">
+        <div class="empty-state">
+            <div class="empty-state-icon">📊</div>
+            <h3>Taramaya Hazır</h3>
+            <p>Filtreleri ayarlayın ve "Tara" butonuna tıklayın</p>
+        </div>
+    </div>
+    
+    <div class="resources">
+        <h3>🔗 Veri Kaynakları</h3>
+        <a href="https://bigpara.hurriyet.com.tr/borsa/canli-borsa/" class="resource-link" target="_blank">
+            <div class="resource-name">Bigpara</div>
+            <div class="resource-desc">Canlı borsa ve teknik göstergeler</div>
+        </a>
+        <a href="https://www.investing.com/equities/turkey" class="resource-link" target="_blank">
+            <div class="resource-name">Investing.com</div>
+            <div class="resource-desc">Detaylı teknik analiz</div>
+        </a>
+        <a href="https://www.tradingview.com/markets/stocks-turkey/" class="resource-link" target="_blank">
+            <div class="resource-name">TradingView</div>
+            <div class="resource-desc">Profesyonel grafikler</div>
+        </a>
+        <a href="https://www.isyatirim.com.tr/" class="resource-link" target="_blank">
+            <div class="resource-name">İş Yatırım</div>
+            <div class="resource-desc">BIST teknik analiz</div>
+        </a>
+    </div>
+    
+    <script>
+        // Örnek BIST 100 verileri
+        const sampleStocks = [
+            { name: 'GARAN', price: 150.50, rsi: 45, ema9: 148, ema21: 152, rti: 65 },
+            { name: 'THYAO', price: 280.00, rsi: 35, ema9: 275, ema21: 285, rti: 58 },
+            { name: 'KCHOL', price: 95.00, rsi: 28, ema9: 92, ema21: 98, rti: 52 },
+            { name: 'AKBNK', price: 62.50, rsi: 55, ema9: 60, ema21: 65, rti: 70 },
+            { name: 'EREGL', price: 48.20, rsi: 42, ema9: 46, ema21: 50, rti: 68 },
+            { name: 'SAHOL', price: 85.00, rsi: 38, ema9: 82, ema21: 88, rti: 55 },
+            { name: 'PETKM', price: 155.00, rsi: 48, ema9: 150, ema21: 160, rti: 62 },
+            { name: 'TUPRS', price: 520.00, rsi: 65, ema9: 510, ema21: 530, rti: 72 },
+            { name: 'SISE', price: 45.80, rsi: 32, ema9: 44, ema21: 47, rti: 50 },
+            { name: 'TCELL', price: 68.90, rsi: 58, ema9: 66, ema21: 70, rti: 75 },
+            { name: 'ASELS', price: 95.50, rsi: 40, ema9: 93, ema21: 98, rti: 60 },
+            { name: 'BIMAS', price: 125.00, rsi: 52, ema9: 122, ema21: 128, rti: 68 },
+            { name: 'ISCTR', price: 9.85, rsi: 36, ema9: 9.5, ema21: 10.2, rti: 54 },
+            { name: 'KOZAL', price: 210.00, rsi: 44, ema9: 205, ema21: 215, rti: 66 },
+            { name: 'VAKBN', price: 28.50, rsi: 50, ema9: 27, ema21: 30, rti: 64 }
+        ];
+        
+        let currentStocks = [];
+        let currentFilter = 'all';
+        
+        function loadSampleData() {
+            currentStocks = [...sampleStocks];
+            filterStocks();
+        }
+        
+        function applyQuickFilter(filter) {
+            // Chip aktif durumunu güncelle
+            document.querySelectorAll('.chip').forEach(chip => {
+                chip.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            currentFilter = filter;
+            
+            // Filtreleri otomatik ayarla
+            switch(filter) {
+                case 'oversold':
+                    document.getElementById('rsiMin').value = 0;
+                    document.getElementById('rsiMax').value = 30;
+                    document.getElementById('emaCross').value = 'all';
+                    document.getElementById('rtiMin').value = 40;
+                    break;
+                case 'golden':
+                    document.getElementById('rsiMin').value = 30;
+                    document.getElementById('rsiMax').value = 70;
+                    document.getElementById('emaCross').value = 'golden';
+                    document.getElementById('rtiMin').value = 50;
+                    break;
+                case 'strong':
+                    document.getElementById('rsiMin').value = 40;
+                    document.getElementById('rsiMax').value = 70;
+                    document.getElementById('emaCross').value = 'all';
+                    document.getElementById('rtiMin').value = 65;
+                    break;
+                default:
+                    document.getElementById('rsiMin').value = 30;
+                    document.getElementById('rsiMax').value = 70;
+                    document.getElementById('emaCross').value = 'all';
+                    document.getElementById('rtiMin').value = 50;
+            }
+            
+            if (currentStocks.length > 0) {
+                filterStocks();
+            }
+        }
+        
+        function filterStocks() {
+            if (currentStocks.length === 0) {
+                currentStocks = [...sampleStocks];
+            }
+            
+            const rsiMin = parseFloat(document.getElementById('rsiMin').value);
+            const rsiMax = parseFloat(document.getElementById('rsiMax').value);
+            const emaCross = document.getElementById('emaCross').value;
+            const rtiMin = parseFloat(document.getElementById('rtiMin').value);
+            
+            const filtered = currentStocks.filter(stock => {
+                let pass = true;
+                
+                // RSI filtresi
+                if (stock.rsi < rsiMin || stock.rsi > rsiMax) {
+                    pass = false;
+                }
+                
+                // RTI filtresi
+                if (stock.rti < rtiMin) {
+                    pass = false;
+                }
+                
+                // EMA kesişim filtresi
+                if (emaCross === 'golden' && stock.ema9 <= stock.ema21) {
+                    pass = false;
+                } else if (emaCross === 'death' && stock.ema9 >= stock.ema21) {
+                    pass = false;
+                }
+                
+                return pass;
+            });
+            
+            displayStocks(filtered);
+        }
+        
+        function displayStocks(stocks) {
+            const container = document.getElementById('stocksContainer');
+            
+            if (stocks.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">😕</div>
+                        <h3>Sonuç Bulunamadı</h3>
+                        <p>Filtre kriterlerinizi değiştirip tekrar deneyin</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const html = `
+                <div class="section-header">
+                    <div class="section-title">Uygun Hisseler</div>
+                    <div class="count-badge">${stocks.length} sonuç</div>
+                </div>
+                ${stocks.map(stock => createStockCard(stock)).join('')}
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        function createStockCard(stock) {
+            const signals = getSignals(stock);
+            
+            return `
+                <div class="stock-card">
+                    <div class="stock-header">
+                        <div class="stock-name">${stock.name}</div>
+                        <div class="stock-price">₺${stock.price.toFixed(2)}</div>
+                    </div>
+                    <div class="indicators-grid">
+                        <div class="indicator-box">
+                            <div class="indicator-label">RSI</div>
+                            <div class="indicator-value">${stock.rsi.toFixed(1)}</div>
+                        </div>
+                        <div class="indicator-box">
+                            <div class="indicator-label">EMA 9</div>
+                            <div class="indicator-value">₺${stock.ema9.toFixed(2)}</div>
+                        </div>
+                        <div class="indicator-box">
+                            <div class="indicator-label">EMA 21</div>
+                            <div class="indicator-value">₺${stock.ema21.toFixed(2)}</div>
+                        </div>
+                        <div class="indicator-box">
+                            <div class="indicator-label">RTI</div>
+                            <div class="indicator-value">${stock.rti.toFixed(0)}</div>
+                        </div>
+                    </div>
+                    <div class="signals">
+                        ${signals.map(s => `<span class="signal-tag signal-${s.type}">${s.text}</span>`).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function getSignals(stock) {
+            const signals = [];
+            
+            // RSI sinyalleri
+            if (stock.rsi < 30) {
+                signals.push({ type: 'buy', text: '🟢 Aşırı Satım' });
+            } else if (stock.rsi > 70) {
+                signals.push({ type: 'sell', text: '🔴 Aşırı Alım' });
+            } else if (stock.rsi >= 40 && stock.rsi <= 60) {
+                signals.push({ type: 'neutral', text: '🟡 Dengeli RSI' });
+            }
+            
+            // EMA sinyalleri
+            if (stock.ema9 > stock.ema21) {
+                signals.push({ type: 'buy', text: '🟢 Golden Cross' });
+            } else {
+                signals.push({ type: 'sell', text: '🔴 Death Cross' });
+            }
+            
+            // Fiyat/EMA pozisyonu
+            if (stock.price > stock.ema9 && stock.price > stock.ema21) {
+                signals.push({ type: 'buy', text: '🟢 Destek Üstü' });
+            }
+            
+            // RTI sinyali
+            if (stock.rti > 65) {
+                signals.push({ type: 'buy', text: '🟢 Güçlü Trend' });
+            } else if (stock.rti < 45) {
+                signals.push({ type: 'sell', text: '🔴 Zayıf Trend' });
+            }
+            
+            return signals;
+        }
+        
+        // Otomatik örnek veri yükle
+        window.addEventListener('load', () => {
+            loadSampleData();
+        });
+    </script>
+</body>
+</html>
