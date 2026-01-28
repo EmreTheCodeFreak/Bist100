@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test v2</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #1d1d1f;
+            margin-bottom: 24px;
+            font-size: 28px;
+        }
+        .test-section {
+            margin-bottom: 32px;
+            padding: 20px;
+            background: #f5f5f7;
+            border-radius: 12px;
+        }
+        .test-section h2 {
+            color: #667eea;
+            margin-bottom: 16px;
+            font-size: 20px;
+        }
+        button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 12px;
+            margin-bottom: 12px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 16px;
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            white-space: pre-wrap;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            border-left-color: #10b981;
+            background: #d1f4e0;
+            color: #0e8345;
+        }
+        .error {
+            border-left-color: #ef4444;
+            background: #ffd9d9;
+            color: #c41e3a;
+        }
+        .info {
+            background: #e7f3ff;
+            border-left-color: #3b82f6;
+            color: #1e40af;
+            padding: 12px;
+            margin-bottom: 16px;
+            border-radius: 8px;
+        }
+        .loading {
+            color: #667eea;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 API Test v2 - Doğru Endpoint</h1>
+        <div class="info">
+            Yahoo Finance1 API'nin doğru endpoint'ini test ediyoruz: get-timeseries
+        </div>
+
+        <!-- Yahoo Finance v2 Test -->
+        <div class="test-section">
+            <h2>📊 Yahoo Finance1 (get-timeseries)</h2>
+            <p style="margin-bottom: 16px; color: #666;">
+                Güncel fiyat endpoint'i
+            </p>
+            <button onclick="testYahooTimeseries()" id="yahooTSBtn">Test Timeseries</button>
+            <div id="yahooTSResult"></div>
+        </div>
+
+        <!-- Yahoo Chart API Test -->
+        <div class="test-section">
+            <h2>📈 Yahoo Finance1 (get-chart)</h2>
+            <p style="margin-bottom: 16px; color: #666;">
+                Geçmiş veri endpoint'i - Bu bizim için önemli!
+            </p>
+            <button onclick="testYahooChart()" id="yahooChartBtn">Test Chart</button>
+            <div id="yahooChartResult"></div>
+        </div>
+
+        <!-- BIST API Test -->
+        <div class="test-section">
+            <h2>✅ BIST API (Çalışıyor)</h2>
+            <p style="margin-bottom: 16px; color: #666;">
+                Biliyoruz ki bu çalışıyor, sadece onay için
+            </p>
+            <button onclick="testBISTAPI()" id="bistBtn">Test BIST</button>
+            <div id="bistResult"></div>
+        </div>
+    </div>
+
+    <script>
+        const RAPIDAPI_KEY = 'a6b421a13cmshfff258d85702407p19ef6fjsn0e60e66f9b71';
+
+        async function testYahooTimeseries() {
+            const resultDiv = document.getElementById('yahooTSResult');
+            const btn = document.getElementById('yahooTSBtn');
+            
+            btn.disabled = true;
+            resultDiv.innerHTML = '<div class="result loading">⏳ Test ediliyor...</div>';
+
+            try {
+                const symbol = 'GARAN.IS';
+                const url = `https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-timeseries?symbol=${symbol}&region=US`;
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'x-rapidapi-host': 'apidojo-yahoo-finance-v1.p.rapidapi.com',
+                        'x-rapidapi-key': RAPIDAPI_KEY
+                    }
+                });
+
+                const statusText = `Status: ${response.status} ${response.statusText}`;
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    resultDiv.innerHTML = `<div class="result error">❌ TIMESERIES BAŞARISIZ\n\n${statusText}\n\nHata: ${errorText}</div>`;
+                    btn.disabled = false;
+                    return;
+                }
+
+                const data = await response.json();
+                resultDiv.innerHTML = `<div class="result success">✅ TIMESERIES ÇALIŞIYOR!\n\n${statusText}\n\nVeri:\n${JSON.stringify(data, null, 2).substring(0, 800)}...</div>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result error">❌ TIMESERIES HATASI\n\nHata: ${error.message}</div>`;
+            }
+            
+            btn.disabled = false;
+        }
+
+        async function testYahooChart() {
+            const resultDiv = document.getElementById('yahooChartResult');
+            const btn = document.getElementById('yahooChartBtn');
+            
+            btn.disabled = true;
+            resultDiv.innerHTML = '<div class="result loading">⏳ Test ediliyor...</div>';
+
+            try {
+                const symbol = 'GARAN.IS';
+                const url = `https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v3/get-chart?interval=1d&symbol=${symbol}&range=1y&region=US`;
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'x-rapidapi-host': 'apidojo-yahoo-finance-v1.p.rapidapi.com',
+                        'x-rapidapi-key': RAPIDAPI_KEY
+                    }
+                });
+
+                const statusText = `Status: ${response.status} ${response.statusText}`;
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    resultDiv.innerHTML = `<div class="result error">❌ CHART BAŞARISIZ\n\n${statusText}\n\nHata: ${errorText}</div>`;
+                    btn.disabled = false;
+                    return;
+                }
+
+                const data = await response.json();
+                
+                // Veri yapısını kontrol et
+                const chart = data.chart?.result?.[0];
+                if (!chart) {
+                    resultDiv.innerHTML = `<div class="result error">❌ CHART VERI FORMATI YANLIŞ\n\n${statusText}\n\nVeri:\n${JSON.stringify(data, null, 2).substring(0, 800)}...</div>`;
+                    btn.disabled = false;
+                    return;
+                }
+
+                const timestamps = chart.timestamp || [];
+                const quote = chart.indicators?.quote?.[0];
+                const close = quote?.close || [];
+                const currentPrice = chart.meta?.regularMarketPrice;
+
+                resultDiv.innerHTML = `<div class="result success">✅ CHART API ÇALIŞIYOR! (BUNU KULLANACAĞIZ!)\n\n${statusText}\n\nSembol: ${symbol}\nGüncel Fiyat: ₺${currentPrice}\nGeçmiş Veri: ${close.length} gün\n\nİlk 5 Kapanış:\n${close.slice(0, 5).map((p, i) => `Gün ${i+1}: ₺${p?.toFixed(2) || 'null'}`).join('\n')}\n\nSon 5 Kapanış:\n${close.slice(-5).map((p, i) => `Gün ${close.length - 5 + i + 1}: ₺${p?.toFixed(2) || 'null'}`).join('\n')}</div>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result error">❌ CHART HATASI\n\nHata: ${error.message}\n\nDetay: ${error.stack}</div>`;
+            }
+            
+            btn.disabled = false;
+        }
+
+        async function testBISTAPI() {
+            const resultDiv = document.getElementById('bistResult');
+            const btn = document.getElementById('bistBtn');
+            
+            btn.disabled = true;
+            resultDiv.innerHTML = '<div class="result loading">⏳ Test ediliyor...</div>';
+
+            try {
+                const response = await fetch('https://bist100-stock-data-15-minutes-late-live.p.rapidapi.com/bist100/prices', {
+                    method: 'GET',
+                    headers: {
+                        'x-rapidapi-host': 'bist100-stock-data-15-minutes-late-live.p.rapidapi.com',
+                        'x-rapidapi-key': RAPIDAPI_KEY
+                    }
+                });
+
+                const statusText = `Status: ${response.status} ${response.statusText}`;
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    resultDiv.innerHTML = `<div class="result error">❌ BIST BAŞARISIZ\n\n${statusText}\n\nHata: ${errorText}</div>`;
+                    btn.disabled = false;
+                    return;
+                }
+
+                const data = await response.json();
+                const firstStocks = Object.keys(data).slice(0, 3);
+                const samples = firstStocks.map(key => `${key}: ₺${data[key]?.price || 'N/A'}`).join('\n');
+                
+                resultDiv.innerHTML = `<div class="result success">✅ BIST API ÇALIŞIYOR!\n\n${statusText}\n\nÖrnek Hisseler:\n${samples}\n\nToplam: ${Object.keys(data).length} hisse</div>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result error">❌ BIST HATASI\n\nHata: ${error.message}</div>`;
+            }
+            
+            btn.disabled = false;
+        }
+
+        // Sayfa yüklendiğinde otomatik test
+        window.addEventListener('load', () => {
+            console.log('✅ Test sayfası v2 hazır!');
+            console.log('📌 En önemli test: "Test Chart" butonu - geçmiş veri için!');
+        });
+    </script>
+</body>
+</html>
